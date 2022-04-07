@@ -1,0 +1,1 @@
+enum ConnectionStatus { NONE, CONNECTED, CLOSED, CONNECTING, ERRORED }

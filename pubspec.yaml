@@ -78,6 +78,10 @@ flutter:
     - assets/images/funnel.png
     - assets/images/beaker.png
     - assets/images/arm.png
+    - assets/images/arm_base.png
+    - assets/images/arm_link_1.png
+    - assets/images/arm_link_2.png
+    - assets/images/arm_gripper.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:js' as js;
 import 'dart:math';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yuvaan_gui/config/config.dart';
@@ -150,7 +151,7 @@ class _HomeControlState extends State<HomeControl> {
   @override
   void dispose() {
     Provider.of<HomeControlProvider>(context).clearTopics();
-    // timer.cancel();
+    timer.cancel();
     super.dispose();
   }
 
@@ -171,7 +172,7 @@ class _HomeControlState extends State<HomeControl> {
           height: SizeConfig.verticalBlockSize * 25.5,
           width: SizeConfig.horizontalBlockSize * 12,
           child: Transform.rotate(
-            angle: (topic.msg['roll'] ?? 0) + 0.1,
+            angle: (topic.msg['roll'] ?? 0),
             child: Image.asset('assets/images/side.png'),
             alignment: Alignment.center,
           ),
@@ -191,17 +192,19 @@ class _HomeControlState extends State<HomeControl> {
 
   @override
   Widget build(BuildContext context) {
-    // print(topicsInitialised);
     return Padding(
       padding: EdgeInsets.symmetric(
-          horizontal: SizeConfig.horizontalBlockSize * 2,
+          horizontal: SizeConfig.horizontalBlockSize * 1,
           vertical: SizeConfig.verticalBlockSize * 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Column(
             children: [
-              CameraFeed(),
+              CameraFeed(
+                tile_height: SizeConfig.verticalBlockSize * 40,
+                tile_width: SizeConfig.horizontalBlockSize * 40,
+              ),
               TileWidget(
                 height: SizeConfig.verticalBlockSize * 38.5,
                 width: SizeConfig.horizontalBlockSize * 40,
@@ -473,3 +476,21 @@ class _HomeControlState extends State<HomeControl> {
     );
   }
 }
+
+
+
+//  ScrollConfiguration(
+//         behavior: ScrollConfiguration.of(context).copyWith(
+//           dragDevices: {
+//             PointerDeviceKind.touch,
+//             PointerDeviceKind.mouse,
+//             PointerDeviceKind.stylus,
+//             PointerDeviceKind.invertedStylus,
+//             PointerDeviceKind.unknown,
+//           },
+//         ),
+//         child: SingleChildScrollView(
+
+
+
+

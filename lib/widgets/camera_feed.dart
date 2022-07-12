@@ -9,18 +9,20 @@ import 'package:yuvaan_gui/widgets/tile_widget.dart';
 class CameraFeed extends StatelessWidget {
   final String topicName;
   final String altText;
-  final double height;
+  final double tile_height;
+  final double tile_width;
 
   CameraFeed({
     this.topicName = "usb_cam",
     this.altText = "Live feed not enabled",
-    this.height,
+    @required this.tile_height,
+    @required this.tile_width,
   });
 
   WebViewXController webviewController;
 
   String get initialContent {
-    return '''<img src= "${"http://" + url + ":8080/stream?topic=/" + topicName + "/image_raw&type=mjpeg&quality=80"}" width=${SizeConfig.horizontalBlockSize * 38} height=${height ?? SizeConfig.verticalBlockSize * 36} alt="${"Ummffffff....... " + altText}" style="color: #FFFFFF;font-weght: bolder;
+    return '''<img src= "${"http://" + url + ":8080/stream?topic=/" + topicName + "/image_raw&type=mjpeg&quality=80"}" width=${tile_width - 20} height=${tile_height - 20} alt="${altText}" style="color: #FFFFFF;font-weght: bolder;
   font-size:20px;">''';
   }
 
@@ -30,14 +32,14 @@ class CameraFeed extends StatelessWidget {
       children: [
         TileWidget(
           isCenter: true,
-          width: SizeConfig.horizontalBlockSize * 40,
-          height: SizeConfig.verticalBlockSize * 40,
+          width: tile_width,
+          height: tile_height,
           child: WebViewX(
             initialContent: initialContent,
             initialSourceType: SourceType.html,
             onWebViewCreated: (controller) => webviewController = controller,
-            width: SizeConfig.horizontalBlockSize * 39,
-            height: SizeConfig.verticalBlockSize * 39,
+            width: tile_width,
+            height: tile_height,
           ),
         ),
         Positioned(
@@ -63,3 +65,19 @@ class CameraFeed extends StatelessWidget {
     );
   }
 }
+
+
+
+
+// TileWidget(
+//           isCenter: true,
+//           width: tile_width ?? SizeConfig.horizontalBlockSize * 40,
+//           height: tile_height ?? SizeConfig.verticalBlockSize * 40,
+//           child: WebViewX(
+//             initialContent: initialContent,
+//             initialSourceType: SourceType.html,
+//             onWebViewCreated: (controller) => webviewController = controller,
+//             width: image_width ?? SizeConfig.horizontalBlockSize * 39,
+//             height: image_height ?? SizeConfig.verticalBlockSize * 39,
+//           ),
+//         ),

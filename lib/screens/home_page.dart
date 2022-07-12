@@ -3,6 +3,7 @@ import 'dart:js' as js;
 
 import 'package:collapsible_sidebar/collapsible_sidebar.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'package:yuvaan_gui/globals/myColors.dart';
@@ -111,8 +112,24 @@ class _HomePageState extends State<HomePage> {
         selectedIconBox: selected_color,
         selectedIconColor: kWhite,
         borderRadius: 0,
-        body: Body(
-          currentPage: _pages[_currentPage],
+        // body: ScrollConfiguration(
+        //   behavior: ScrollConfiguration.of(context).copyWith(
+        //     dragDevices: {
+        //       PointerDeviceKind.touch,
+        //       PointerDeviceKind.mouse,
+        //       PointerDeviceKind.stylus,
+        //       PointerDeviceKind.invertedStylus,
+        //       PointerDeviceKind.unknown,
+        //     },
+        //   ),
+        //   child: Body(
+        //     currentPage: _pages[_currentPage],
+        //   ),
+        // ),
+        body: SingleChildScrollView(
+          child: Body(
+            currentPage: _pages[_currentPage],
+          ),
         ),
         minWidth: 70,
         iconSize: 30,

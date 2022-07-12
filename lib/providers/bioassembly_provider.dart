@@ -13,6 +13,7 @@ class BioassemblyProvider with ChangeNotifier {
   Topic right_syringe;
   Topic rotateDrill;
   Topic changeDrillState;
+  Topic changeDrillPos;
 
   Future<void> initTopics() async {
     if (connectionStatus == ConnectionStatus.CONNECTED) {
@@ -64,7 +65,14 @@ class BioassemblyProvider with ChangeNotifier {
         queueLength: 10,
         queueSize: 10,
       );
-
+      changeDrillPos = Topic(
+        ros: ros,
+        name: '/change_drill_pos',
+        type: "std_msgs/Int32",
+        reconnectOnClose: true,
+        queueLength: 10,
+        queueSize: 10,
+      );
       await Future.wait(
         [
           beaker_stepper.advertise(),
@@ -73,6 +81,7 @@ class BioassemblyProvider with ChangeNotifier {
           right_syringe.advertise(),
           rotateDrill.advertise(),
           changeDrillState.advertise(),
+          changeDrillPos.advertise(),
         ],
       );
     }
@@ -116,6 +125,13 @@ class BioassemblyProvider with ChangeNotifier {
   Future<void> toggleDrillState() async {
     var msg = {};
     await changeDrillState.publish(msg);
+  }
+
+  Future<void> moveDrillAssembly(int pwmVal) async {
+    var msg = {
+      'data': pwmVal.toInt(),
+    };
+    await changeDrillPos.publish(msg);
   }
 
   Future<void> clearTopics() async {

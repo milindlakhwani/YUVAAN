@@ -47,6 +47,7 @@ class _BioassemblyState extends State<Bioassembly>
   ];
   int func_calls = 0;
   double prev_throttle_val = 0;
+  double prev_steering_val = 0;
   int drill_rpm = 180;
   int drill_speed = 0;
   double percent_height = SizeConfig.verticalBlockSize * 80;
@@ -57,6 +58,8 @@ class _BioassemblyState extends State<Bioassembly>
   bool readingSensors = false;
   bool topicsInitialised = false;
   int duration = 1000;
+  double encoder_motor_speed = 0;
+  bool drill_moving = false;
 
   void rotateBasePlate(double angle) {
     current_angle += angle;
@@ -140,12 +143,20 @@ class _BioassemblyState extends State<Bioassembly>
         .publishDrillSpeed((-val * 255).toInt());
   }
 
-  void change_drill_pos({bool moveUp}) {
-    if (moveUp && percent_height <= SizeConfig.verticalBlockSize * 79.5) {
+  void change_drill_pos({int moveDir}) {
+    final bioProvider =
+        Provider.of<BioassemblyProvider>(context, listen: false);
+
+    int pwmVal = (encoder_motor_speed.abs() * 255).toInt() * (moveDir);
+
+    bioProvider.moveDrillAssembly(pwmVal);
+
+    if (moveDir == 1 && percent_height <= SizeConfig.verticalBlockSize * 79.5) {
       setState(() {
         percent_height += 5;
       });
-    } else if (!moveUp && percent_height >= SizeConfig.verticalBlockSize * 1) {
+    } else if (moveDir == -1 &&
+        percent_height >= SizeConfig.verticalBlockSize * 1) {
       setState(() {
         percent_height -= 5;
       });
@@ -292,6 +303,24 @@ class _BioassemblyState extends State<Bioassembly>
         }
       }
 
+      if (state['R1'] == 1 &&
+          double.parse(state['Steering'].toStringAsFixed(1)) != 0.0) {
+        drill_moving = true;
+        change_drill_pos(moveDir: -1);
+        waimt(40);
+      } else if (state['L1'] == 1 &&
+          double.parse(state['Steering'].toStringAsFixed(1)) != 0.0) {
+        drill_moving = true;
+        change_drill_pos(moveDir: 1);
+        waimt(40);
+      } else {
+        if (drill_moving) {
+          change_drill_pos(moveDir: 0);
+          drill_moving = false;
+        }
+        // waimt(40);
+      }
+
       if (state['R2'] == 1) {
         moveSyringe(Syringe.Right);
         waimt(100);
@@ -313,8 +342,15 @@ class _BioassemblyState extends State<Bioassembly>
         rotate_drill(state['Throttle']);
         waimt(100);
       }
+      if (state['Steering'] != prev_steering_val) {
+        setState(() {
+          encoder_motor_speed = state['Steering'];
+        });
+        waimt(100);
+      }
 
       prev_throttle_val = state['Throttle'];
+      prev_steering_val = state['Steering'];
     });
 
     timer.start();
@@ -337,7 +373,9 @@ class _BioassemblyState extends State<Bioassembly>
           Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              CameraFeed(),
+              CameraFeed(
+                  tile_height: SizeConfig.verticalBlockSize * 40,
+                  tile_width: SizeConfig.horizontalBlockSize * 40),
               Row(
                 children: [
                   TileWidget(
@@ -485,19 +523,23 @@ class _BioassemblyState extends State<Bioassembly>
                             children: [
                               Text(
                                 "Syringe Motion : ${moveDown ? "Down" : "Up"}",
-                                style: MyFonts.medium.factor(1.25),
+                                style: MyFonts.medium.factor(1),
                               ),
                               Text(
                                 "Current drill speemd : $drill_speed",
-                                style: MyFonts.medium.factor(1.25),
+                                style: MyFonts.medium.factor(1),
+                              ),
+                              Text(
+                                "Current drill assembly speemd : ${encoder_motor_speed.abs().toStringAsFixed(2)}",
+                                style: MyFonts.medium.factor(1),
                               ),
                               Text(
                                 "Funnel minimum rotation angle : ${min_rotation_angle.toStringAsFixed(1)}",
-                                style: MyFonts.medium.factor(1.25),
+                                style: MyFonts.medium.factor(1),
                               ),
                               Text(
                                 "Topics initialized : $topicsInitialised",
-                                style: MyFonts.medium.factor(1.25),
+                                style: MyFonts.medium.factor(1),
                               ),
                             ],
                           ),

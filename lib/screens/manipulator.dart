@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:js' as js;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

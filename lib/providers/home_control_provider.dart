@@ -16,28 +16,31 @@ class HomeControlProvider with ChangeNotifier {
   Future<void> initTopics() async {
     if (connectionStatus == ConnectionStatus.CONNECTED) {
       cmd_vel = Topic(
-          ros: ros,
-          name: '/cmd_vel',
-          type: "geometry_msgs/Twist",
-          reconnectOnClose: true,
-          queueLength: 10,
-          queueSize: 10);
+        ros: ros,
+        name: '/cmd_vel',
+        type: "geometry_msgs/Twist",
+        reconnectOnClose: true,
+        queueLength: 10,
+        queueSize: 10,
+      );
 
       lidar_angle_range = Topic(
-          ros: ros,
-          name: '/lidar_angle_range',
-          type: "geometry_msgs/Point",
-          reconnectOnClose: true,
-          queueLength: 10,
-          queueSize: 10);
+        ros: ros,
+        name: '/laser_scan',
+        type: "yuvaan/Lidar",
+        reconnectOnClose: true,
+        queueLength: 10,
+        queueSize: 10,
+      );
 
       euler_angle = Topic(
-          ros: ros,
-          name: '/imu/euler',
-          type: "yuvaan/Euler",
-          reconnectOnClose: true,
-          queueLength: 10,
-          queueSize: 10);
+        ros: ros,
+        name: '/imu/euler',
+        type: "yuvaan/Euler",
+        reconnectOnClose: true,
+        queueLength: 10,
+        queueSize: 10,
+      );
 
       await Future.wait(
         [
@@ -48,6 +51,12 @@ class HomeControlProvider with ChangeNotifier {
       );
     }
   }
+
+  // void calcDist(List<double> frontRanges) {
+  //   frontDist = frontRanges.fold(
+  //           0, (previousValue, element) => previousValue + element) /
+  //       frontRanges.length;
+  // }
 
   Future<void> publishVelocityCommands(double lin_vel, double ang_vel) async {
     var linear = {

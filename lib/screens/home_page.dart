@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:js' as js;
 
 import 'package:collapsible_sidebar/collapsible_sidebar.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'package:yuvaan_gui/globals/myColors.dart';
@@ -29,32 +27,32 @@ class _HomePageState extends State<HomePage> {
 
   final AssetImage _avatarImg = AssetImage('assets/images/yuvaan_logo.jpg');
 
-  @override
-  void initState() {
-    super.initState();
+  // @override
+  // void initState() {
+  //   super.initState();
 
-    // timer = Timer.periodic(const Duration(milliseconds: 150), (Timer t) {
-    //   var state = js.JsObject.fromBrowserObject(js.context['state']);
-    //   controller_values['Share'] = state['Share'];
-    //   controller_values['Options'] = state['Options'];
+  //   timer = Timer.periodic(const Duration(milliseconds: 150), (Timer t) {
+  //     var state = js.JsObject.fromBrowserObject(js.context['state']);
+  //     controller_values['Share'] = state['Share'];
+  //     controller_values['Options'] = state['Options'];
 
-    //   setState(() {
-    //     if (controller_values['Share'] == 1) {
-    //       if (_currentPage == 0) {
-    //         _currentPage = 2;
-    //       } else {
-    //         _currentPage--;
-    //       }
-    //     } else if (controller_values['Options'] == 1) {
-    //       if (_currentPage == 2) {
-    //         _currentPage = 0;
-    //       } else {
-    //         _currentPage++;
-    //       }
-    //     }
-    //   });
-    // });
-  }
+  //     setState(() {
+  //       if (controller_values['Share'] == 1) {
+  //         if (_currentPage == 0) {
+  //           _currentPage = 2;
+  //         } else {
+  //           _currentPage--;
+  //         }
+  //       } else if (controller_values['Options'] == 1) {
+  //         if (_currentPage == 2) {
+  //           _currentPage = 0;
+  //         } else {
+  //           _currentPage++;
+  //         }
+  //       }
+  //     });
+  //   });
+  // }
 
   @override
   void dispose() {

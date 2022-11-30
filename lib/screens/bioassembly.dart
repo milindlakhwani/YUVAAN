@@ -1,7 +1,5 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:js' as js;
-import 'dart:io';
 
 import 'package:animated_widgets/widgets/rotation_animated.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +26,6 @@ class Bioassembly extends StatefulWidget {
 class _BioassemblyState extends State<Bioassembly>
     with SingleTickerProviderStateMixin {
   PausableTimer timer;
-  // Timer timer;
   Timer ros_timer;
   double counter = 0;
   double current_angle = 0;
@@ -220,140 +217,142 @@ class _BioassemblyState extends State<Bioassembly>
       }
     });
 
-    timer = PausableTimer(const Duration(milliseconds: 20), () {
-      var state = js.JsObject.fromBrowserObject(js.context['state']);
-      timer
-        ..reset()
-        ..start();
+    // timer = PausableTimer(const Duration(milliseconds: 20), () {
+    //   var state = js.JsObject.fromBrowserObject(js.context['state']);
+    //   timer
+    //     ..reset()
+    //     ..start();
 
-      if (state['Up'] == 1) {
-        if (state['Right'] == 1) {
-          rotateBasePlate(22.5);
-          waimt(1000);
-        } else if (state['Left'] == 1) {
-          rotateBasePlate(-22.5);
-          waimt(1000);
-        }
-      } else if (state['Up'] == 0) {
-        if (state['Right'] == 1) {
-          rotateBasePlate(45);
-          waimt(1000);
-        } else if (state['Left'] == 1) {
-          rotateBasePlate(-45);
-          waimt(1000);
-        }
-      }
+    //   if (state['Up'] == 1) {
+    //     if (state['Right'] == 1) {
+    //       rotateBasePlate(22.5);
+    //       waimt(1000);
+    //     } else if (state['Left'] == 1) {
+    //       rotateBasePlate(-22.5);
+    //       waimt(1000);
+    //     }
+    //   } else if (state['Up'] == 0) {
+    //     if (state['Right'] == 1) {
+    //       rotateBasePlate(45);
+    //       waimt(1000);
+    //     } else if (state['Left'] == 1) {
+    //       rotateBasePlate(-45);
+    //       waimt(1000);
+    //     }
+    //   }
 
-      if (state['Y'] == 1) {
-        setState(() {
-          moveDown = !moveDown;
-        });
-        waimt(500);
-      }
+    //   if (state['Y'] == 1) {
+    //     setState(() {
+    //       moveDown = !moveDown;
+    //     });
+    //     waimt(500);
+    //   }
 
-      if (state['Up'] == 1) {
-        setState(() {
-          min_rotation_angle += 0.9;
-        });
-        waimt(500);
-      }
+    //   if (state['Up'] == 1) {
+    //     setState(() {
+    //       min_rotation_angle += 0.9;
+    //     });
+    //     waimt(500);
+    //   }
 
-      if (state['Down'] == 1) {
-        if (double.parse(min_rotation_angle.toStringAsFixed(2)) > 0.9) {
-          setState(() {
-            min_rotation_angle -= 0.9;
-          });
-          waimt(500);
-        }
-      }
+    //   if (state['Down'] == 1) {
+    //     if (double.parse(min_rotation_angle.toStringAsFixed(2)) > 0.9) {
+    //       setState(() {
+    //         min_rotation_angle -= 0.9;
+    //       });
+    //       waimt(500);
+    //     }
+    //   }
 
-      if (state['X'] == 1) {
-        markCurrentBeaker();
-      }
-      if (state['A'] == 1) {
-        change_drill_state();
-        waimt(1000);
-      }
+    //   if (state['X'] == 1) {
+    //     markCurrentBeaker();
+    //   }
+    //   if (state['A'] == 1) {
+    //     change_drill_state();
+    //     waimt(1000);
+    //   }
 
-      if (state['B'] == 1) {
-        if (!isFeedEnabled) {
-          waimt(1000);
-          setState(() {
-            isFeedEnabled = true;
-          });
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: Text('Microscope Feed'),
-                content: CameraFeed(
-                  topicName: 'microscope',
-                  altText: "Could'nt get micrscope feed",
-                ),
-              );
-            },
-          ).then((_) {
-            setState(() {
-              isFeedEnabled = false;
-            });
-          });
-        } else {
-          waimt(1000);
-          Navigator.of(context).pop();
-        }
-      }
+    //   if (state['B'] == 1) {
+    //     if (!isFeedEnabled) {
+    //       waimt(1000);
+    //       setState(() {
+    //         isFeedEnabled = true;
+    //       });
+    //       showDialog(
+    //         context: context,
+    //         builder: (BuildContext context) {
+    //           return AlertDialog(
+    //             title: Text('Microscope Feed'),
+    //             content: CameraFeed(
+    //               tile_width: SizeConfig.horizontalBlockSize * 50,
+    //               tile_height: SizeConfig.verticalBlockSize * 50,
+    //               topicName: 'microscope',
+    //               altText: "Could'nt get micrscope feed",
+    //             ),
+    //           );
+    //         },
+    //       ).then((_) {
+    //         setState(() {
+    //           isFeedEnabled = false;
+    //         });
+    //       });
+    //     } else {
+    //       waimt(1000);
+    //       Navigator.of(context).pop();
+    //     }
+    //   }
 
-      if (state['R1'] == 1 &&
-          double.parse(state['Steering'].toStringAsFixed(1)) != 0.0) {
-        drill_moving = true;
-        change_drill_pos(moveDir: -1);
-        waimt(40);
-      } else if (state['L1'] == 1 &&
-          double.parse(state['Steering'].toStringAsFixed(1)) != 0.0) {
-        drill_moving = true;
-        change_drill_pos(moveDir: 1);
-        waimt(40);
-      } else {
-        if (drill_moving) {
-          change_drill_pos(moveDir: 0);
-          drill_moving = false;
-        }
-        // waimt(40);
-      }
+    //   if (state['R1'] == 1 &&
+    //       double.parse(state['Steering'].toStringAsFixed(1)) != 0.0) {
+    //     drill_moving = true;
+    //     change_drill_pos(moveDir: -1);
+    //     waimt(40);
+    //   } else if (state['L1'] == 1 &&
+    //       double.parse(state['Steering'].toStringAsFixed(1)) != 0.0) {
+    //     drill_moving = true;
+    //     change_drill_pos(moveDir: 1);
+    //     waimt(40);
+    //   } else {
+    //     if (drill_moving) {
+    //       change_drill_pos(moveDir: 0);
+    //       drill_moving = false;
+    //     }
+    //     // waimt(40);
+    //   }
 
-      if (state['R2'] == 1) {
-        moveSyringe(Syringe.Right);
-        waimt(100);
-      }
-      if (state['L2'] == 1) {
-        moveSyringe(Syringe.Left);
-        waimt(100);
-      }
+    //   if (state['R2'] == 1) {
+    //     moveSyringe(Syringe.Right);
+    //     waimt(100);
+    //   }
+    //   if (state['L2'] == 1) {
+    //     moveSyringe(Syringe.Left);
+    //     waimt(100);
+    //   }
 
-      if (state['R3'] == 1) {
-        rotate_funnel(FunnelRotation.Clockwise);
-        waimt(1000);
-      }
-      if (state['L3'] == 1) {
-        rotate_funnel(FunnelRotation.AntiClockwise);
-        waimt(1000);
-      }
-      if (state['Throttle'] != prev_throttle_val) {
-        rotate_drill(state['Throttle']);
-        waimt(100);
-      }
-      if (state['Steering'] != prev_steering_val) {
-        setState(() {
-          encoder_motor_speed = state['Steering'];
-        });
-        waimt(100);
-      }
+    //   if (state['R3'] == 1) {
+    //     rotate_funnel(FunnelRotation.Clockwise);
+    //     waimt(1000);
+    //   }
+    //   if (state['L3'] == 1) {
+    //     rotate_funnel(FunnelRotation.AntiClockwise);
+    //     waimt(1000);
+    //   }
+    //   if (state['Throttle'] != prev_throttle_val) {
+    //     rotate_drill(state['Throttle']);
+    //     waimt(100);
+    //   }
+    //   if (state['Steering'] != prev_steering_val) {
+    //     setState(() {
+    //       encoder_motor_speed = state['Steering'];
+    //     });
+    //     waimt(100);
+    //   }
 
-      prev_throttle_val = state['Throttle'];
-      prev_steering_val = state['Steering'];
-    });
+    //   prev_throttle_val = state['Throttle'];
+    //   prev_steering_val = state['Steering'];
+    // });
 
-    timer.start();
+    // timer.start();
   }
 
   @override

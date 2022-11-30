@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'dart:js' as js;
 import 'dart:math';
+import 'dart:js' as js;
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yuvaan_gui/config/config.dart';
@@ -24,6 +23,7 @@ class HomeControl extends StatefulWidget {
 }
 
 class _HomeControlState extends State<HomeControl> {
+  final int rangeLength = 560;
   Timer timer;
   Timer ros_timer;
   bool topicsInitialised = false;
@@ -34,6 +34,9 @@ class _HomeControlState extends State<HomeControl> {
   double steeringPrev = 0;
   double throttleVal = 0;
   double steeringVal = 0;
+  double frontDist = 0;
+  double backDist = 0;
+
   Map<String, double> controller_values = {
     'A': 0,
     'B': 0,
@@ -53,41 +56,45 @@ class _HomeControlState extends State<HomeControl> {
     'Throttle': 0.0,
   };
 
-  double mapOneRangeToAnother(double sourceNumber, double fromA, double fromB,
-      double toA, double toB, int decimalPrecision) {
-    double deltaA = fromB - fromA;
-    double deltaB = toB - toA;
-    double scale = deltaB / deltaA;
-    double negA = -1 * fromA;
-    double offset = (negA * scale) + toA;
-    double finalNumber = (sourceNumber * scale) + offset;
-    int calcScale = pow(10, decimalPrecision).toInt();
-
-    return ((finalNumber * calcScale) / calcScale).roundToDouble();
+  double map(
+      double x, double in_min, double in_max, double out_min, double out_max) {
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
   }
 
-  void addCord(Map<String, dynamic> topicData, double width, double height) {
-    double x = topicData['x'];
-    double y = topicData['y'];
-    final z = topicData['z'];
-    // final dist = topicData['x'];
-    // final step = topicData['y'];
-    // final angle = 180 - (step * 0.45);
-    // double x, y;
+  List<Offset> addCord(
+      Map<String, dynamic> topicData, double width, double height) {
+    List<dynamic> ranges = topicData['ranges'];
 
-    // x = dist * cos(angle * pi / 180);
-    // y = dist * sin(angle * pi / 180);
+    double angle_diff = 0.01124004554;
+    double curr_angle = 0;
+    double x, y;
+    List<Offset> allCords = [];
 
-    x = mapOneRangeToAnother(
-        x, -lidar_max_dist, lidar_max_dist, (-1 * width) / 2, width / 2, 2);
-    y = mapOneRangeToAnother(y, 0, lidar_max_dist, 0, height, 2);
+    // List<double> frontRange = [
+    //   ...ranges.sublist(0, 20),
+    //   ...ranges.sublist(rangeLength - 20, rangeLength)
+    // ]..removeWhere((element) => element == null);
 
-    y = height - (y + (height / 2));
-    if (z == 1.0 || allCords.length == 400 || y >= ((height / 2) - 5)) {
-      print("Clearing");
-      allCords.clear();
-    }
-    allCords.add(Offset(x, y));
+    // frontDist = frontRange.fold(
+    //         0, (previousValue, element) => previousValue + element) /
+    //     frontRange.length;
+
+    ranges.forEach((e) {
+      if (e == null) {
+        e = 0;
+      }
+      x = 1 * e * sin(curr_angle);
+      y = 1 * e * cos(curr_angle);
+
+      x = map(x, -lidar_max_dist, lidar_max_dist, (-1 * width) / 2, width / 2);
+      y = map(
+          y, -lidar_max_dist, lidar_max_dist, (-1 * height) / 2, height / 2);
+
+      curr_angle += angle_diff;
+      allCords.add(Offset(x, y));
+    });
+
+    return allCords;
   }
 
   @override
@@ -134,9 +141,9 @@ class _HomeControlState extends State<HomeControl> {
           double.parse(controller_values['Throttle'].toStringAsFixed(2));
       steeringVal =
           double.parse(controller_values['Steering'].toStringAsFixed(2));
+      // print(steeringPrev);
 
       if (throttleVal != throttlePrev || steeringVal != steeringPrev) {
-        print("Publishing");
         homeControlProvider.publishVelocityCommands(
           controller_values['Throttle'],
           controller_values['Steering'],
@@ -202,59 +209,28 @@ class _HomeControlState extends State<HomeControl> {
           Column(
             children: [
               CameraFeed(
-                tile_height: SizeConfig.verticalBlockSize * 40,
-                tile_width: SizeConfig.horizontalBlockSize * 40,
+                tile_height: SizeConfig.verticalBlockSize * 55,
+                tile_width: SizeConfig.horizontalBlockSize * 60,
               ),
-              TileWidget(
-                height: SizeConfig.verticalBlockSize * 38.5,
-                width: SizeConfig.horizontalBlockSize * 40,
-                child: topicsInitialised
-                    ? Consumer<HomeControlProvider>(
-                        builder: (ctx, homeControlProvider, _) {
-                        return StreamBuilder<Object>(
-                          stream: homeControlProvider
-                              .lidar_angle_range.subscription
-                              .where((message) =>
-                                  message['topic'] == '/lidar_angle_range'),
-                          builder: (context, snapshot) {
-                            if (snapshot.hasData) {
-                              final topic = TopicData.fromJson(snapshot.data);
-                              addCord(
-                                  topic.msg,
-                                  SizeConfig.horizontalBlockSize * 40,
-                                  SizeConfig.verticalBlockSize * 40);
-                              return CustomPaint(
-                                painter: OpenPainter(
-                                  allCords: allCords,
-                                ),
-                              );
-                            } else {
-                              print(snapshot.data);
-                              return CircularProgressIndicator();
-                            }
-                          },
-                        );
-                      })
-                    : Text("Waiting for lidar topic to be intialized"),
-              ),
-            ],
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TileWidget(
                     isCenter: false,
-                    width: SizeConfig.horizontalBlockSize * 12.5,
-                    height: SizeConfig.verticalBlockSize * 16,
+                    width: SizeConfig.horizontalBlockSize * 11,
+                    height: SizeConfig.verticalBlockSize * 25.5,
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Text(
+                            "State :",
+                            style:
+                                MyFonts.medium.setColor(text_color).factor(1),
+                          ),
+                          SizedBox(
+                            height: SizeConfig.verticalBlockSize * 4,
+                          ),
                           Text(
                             "Throttle : ${(-controller_values['Throttle'] * 0.57).toStringAsFixed(2)} m/s",
                             style:
@@ -269,159 +245,93 @@ class _HomeControlState extends State<HomeControl> {
                                 MyFonts.medium.setColor(text_color).factor(0.9),
                           ),
                           SizedBox(
-                            height: SizeConfig.verticalBlockSize * 3,
+                            height: SizeConfig.verticalBlockSize * 2,
                           ),
+
+                          // Text(
+                          //   "Front Proximity : ${frontDist.toStringAsFixed(2)} m",
+                          //   style:
+                          //       MyFonts.medium.setColor(text_color).factor(0.7),
+                          // ),
+                          // Text(
+                          //   "${frontDist <= 1 ? "Damger" : "Safe"} (dist < 1m)",
+                          //   style:
+                          //       MyFonts.medium.setColor(text_color).factor(0.6),
+                          // ),
+                          // SizedBox(
+                          //   height: SizeConfig.verticalBlockSize * 2,
+                          // ),
+                          // Text(
+                          //   "Back Proximity : ${backDist.toStringAsFixed(2)} m",
+                          //   style:
+                          //       MyFonts.medium.setColor(text_color).factor(0.7),
+                          // ),
+                          // Text(
+                          //   "${backDist <= 1 ? "Damger" : "Safe"} (dist < 1m)",
+                          //   style:
+                          //       MyFonts.medium.setColor(text_color).factor(0.6),
+                          // ),
+                          // SizedBox(
+                          //   height: SizeConfig.verticalBlockSize * 2,
+                          // ),
                           Text(
                             topicsInitialised
                                 ? "Topics Initialized"
                                 : "Not Initialized",
                             style:
-                                MyFonts.bold.setColor(text_color).factor(0.7),
+                                MyFonts.bold.setColor(text_color).factor(0.9),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  TileWidget(
-                    height: SizeConfig.verticalBlockSize * 16,
-                    width: SizeConfig.horizontalBlockSize * 34,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 15, vertical: 15),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              SizedBox(
-                                height: SizeConfig.verticalBlockSize * 5,
-                                width: SizeConfig.horizontalBlockSize * 15,
-                                child: TextField(
-                                  controller: latController,
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    hintText: "Latitude",
-                                    fillColor: selected_color,
-                                    border: InputBorder.none,
-                                    enabledBorder: OutlineInputBorder(
-                                      borderSide: BorderSide.none,
-                                      borderRadius: BorderRadius.circular(
-                                        SizeConfig.horizontalBlockSize * 0.5,
-                                      ),
-                                    ),
-                                    hoverColor: selected_color,
-                                    contentPadding: EdgeInsets.symmetric(
-                                        vertical: 15, horizontal: 10),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderSide: BorderSide.none,
-                                      borderRadius: BorderRadius.circular(
-                                        SizeConfig.horizontalBlockSize * 0.5,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                height: SizeConfig.verticalBlockSize * 5,
-                                width: SizeConfig.horizontalBlockSize * 15,
-                                child: TextField(
-                                  controller: latController,
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    fillColor: selected_color,
-                                    hintText: "Longitude",
-                                    border: InputBorder.none,
-                                    enabledBorder: OutlineInputBorder(
-                                      borderSide: BorderSide.none,
-                                      borderRadius: BorderRadius.circular(
-                                        SizeConfig.horizontalBlockSize * 0.5,
-                                      ),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(
-                                        vertical: 15, horizontal: 10),
-                                    hoverColor: selected_color,
-                                    focusedBorder: OutlineInputBorder(
-                                      borderSide: BorderSide.none,
-                                      borderRadius: BorderRadius.circular(
-                                        SizeConfig.horizontalBlockSize * 0.5,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(
-                            height: 10,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              ElevatedButton(
-                                child: Text("Add Marker"),
-                                style: ElevatedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      SizeConfig.horizontalBlockSize * 0.5,
-                                    ),
-                                  ),
-                                  textStyle: MyFonts.medium
-                                      .factor(1)
-                                      .setColor(text_color),
-                                  fixedSize: Size(
-                                      SizeConfig.horizontalBlockSize * 10,
-                                      SizeConfig.verticalBlockSize * 5.5),
-                                  primary: kBlue,
-                                ),
-                                onPressed: () {},
-                              ),
-                              ElevatedButton(
-                                child: Text("Start Tracking"),
-                                style: ElevatedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      SizeConfig.horizontalBlockSize * 0.5,
-                                    ),
-                                  ),
-                                  textStyle: MyFonts.medium
-                                      .factor(1)
-                                      .setColor(text_color),
-                                  fixedSize: Size(
-                                      SizeConfig.horizontalBlockSize * 10,
-                                      SizeConfig.verticalBlockSize * 5.5),
-                                  primary: kBlue,
-                                ),
-                                onPressed: () {},
-                              ),
-                              ElevatedButton(
-                                child: Text("Clear"),
-                                style: ElevatedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      SizeConfig.horizontalBlockSize * 0.5,
-                                    ),
-                                  ),
-                                  textStyle: MyFonts.medium
-                                      .factor(1)
-                                      .setColor(text_color),
-                                  fixedSize: Size(
-                                      SizeConfig.horizontalBlockSize * 10,
-                                      SizeConfig.verticalBlockSize * 5.5),
-                                  primary: kBlue,
-                                ),
-                                onPressed: () {},
-                              ),
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
+                  topicsInitialised
+                      ? Consumer<HomeControlProvider>(
+                          builder: (ctx, homeControlProvider, _) {
+                          return StreamBuilder<Object>(
+                            stream: homeControlProvider.euler_angle.subscription
+                                .where((message) =>
+                                    message['topic'] == '/imu/euler'),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                final topic = TopicData.fromJson(snapshot.data);
+                                return renderOrientationState(topic);
+                              } else {
+                                // print(snapshot.data);
+                                return TileWidget(
+                                  height: SizeConfig.verticalBlockSize * 25.5,
+                                  width: SizeConfig.horizontalBlockSize * 21,
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
+                            },
+                          );
+                        })
+                      : Stack(
+                          children: [
+                            renderOrientationState(TopicData("", {})),
+                            Container(
+                              width: SizeConfig.horizontalBlockSize * 45 + 40,
+                              height: SizeConfig.verticalBlockSize * 25.5,
+                              child: Text("Waiting for IMU data"),
+                              margin: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.5),
+                                  borderRadius: BorderRadius.circular(15)),
+                              alignment: Alignment.center,
+                            ),
+                          ],
+                        ),
                 ],
               ),
+            ],
+          ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
               TileWidget(
-                height: SizeConfig.verticalBlockSize * 34,
-                width: SizeConfig.horizontalBlockSize * 48,
+                height: SizeConfig.verticalBlockSize * 30,
+                width: SizeConfig.horizontalBlockSize * 30,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(15),
                   child: MapWidget(
@@ -432,43 +342,192 @@ class _HomeControlState extends State<HomeControl> {
                   ),
                 ),
               ),
-              topicsInitialised
-                  ? Consumer<HomeControlProvider>(
-                      builder: (ctx, homeControlProvider, _) {
-                      return StreamBuilder<Object>(
-                        stream: homeControlProvider.euler_angle.subscription
-                            .where(
-                                (message) => message['topic'] == '/imu/euler'),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            final topic = TopicData.fromJson(snapshot.data);
-                            return renderOrientationState(topic);
-                          } else {
-                            // print(snapshot.data);
-                            return TileWidget(
-                              height: SizeConfig.verticalBlockSize * 25.5,
-                              width: SizeConfig.horizontalBlockSize * 21,
-                              child: CircularProgressIndicator(),
-                            );
-                          }
-                        },
-                      );
-                    })
-                  : Stack(
-                      children: [
-                        renderOrientationState(TopicData("", {})),
-                        Container(
-                          width: SizeConfig.horizontalBlockSize * 45 + 40,
-                          height: SizeConfig.verticalBlockSize * 25.5,
-                          child: Text("Waiting for IMU data"),
-                          margin: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(15)),
-                          alignment: Alignment.center,
-                        ),
-                      ],
-                    ),
+              TileWidget(
+                height: SizeConfig.verticalBlockSize * 12,
+                width: SizeConfig.horizontalBlockSize * 30,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          SizedBox(
+                            height: SizeConfig.verticalBlockSize * 4,
+                            width: SizeConfig.horizontalBlockSize * 13,
+                            child: TextField(
+                              controller: latController,
+                              decoration: InputDecoration(
+                                filled: true,
+                                hintText: "Latitude",
+                                fillColor: selected_color,
+                                border: InputBorder.none,
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide.none,
+                                  borderRadius: BorderRadius.circular(
+                                    SizeConfig.horizontalBlockSize * 0.4,
+                                  ),
+                                ),
+                                hoverColor: selected_color,
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 10,
+                                  horizontal: 10,
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide.none,
+                                  borderRadius: BorderRadius.circular(
+                                    SizeConfig.horizontalBlockSize * 0.4,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: SizeConfig.verticalBlockSize * 4,
+                            width: SizeConfig.horizontalBlockSize * 13,
+                            child: TextField(
+                              controller: longController,
+                              decoration: InputDecoration(
+                                filled: true,
+                                hintText: "Longitude",
+                                fillColor: selected_color,
+                                border: InputBorder.none,
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide.none,
+                                  borderRadius: BorderRadius.circular(
+                                    SizeConfig.horizontalBlockSize * 0.4,
+                                  ),
+                                ),
+                                hoverColor: selected_color,
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 10,
+                                  horizontal: 10,
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide.none,
+                                  borderRadius: BorderRadius.circular(
+                                    SizeConfig.horizontalBlockSize * 0.4,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          ElevatedButton(
+                            child: Text("Add Marker"),
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  SizeConfig.horizontalBlockSize * 0.4,
+                                ),
+                              ),
+                              textStyle: MyFonts.medium
+                                  .factor(0.9)
+                                  .setColor(text_color),
+                              fixedSize: Size(
+                                SizeConfig.horizontalBlockSize * 9,
+                                SizeConfig.verticalBlockSize * 3,
+                              ),
+                              primary: kBlue,
+                            ),
+                            onPressed: () {},
+                          ),
+                          ElevatedButton(
+                            child: Text("Start Tracking"),
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  SizeConfig.horizontalBlockSize * 0.4,
+                                ),
+                              ),
+                              textStyle: MyFonts.medium
+                                  .factor(0.9)
+                                  .setColor(text_color),
+                              fixedSize: Size(
+                                SizeConfig.horizontalBlockSize * 9,
+                                SizeConfig.verticalBlockSize * 3,
+                              ),
+                              primary: kBlue,
+                            ),
+                            onPressed: () {},
+                          ),
+                          ElevatedButton(
+                            child: Text("Clear"),
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  SizeConfig.horizontalBlockSize * 0.4,
+                                ),
+                              ),
+                              textStyle: MyFonts.medium
+                                  .factor(0.9)
+                                  .setColor(text_color),
+                              fixedSize: Size(
+                                SizeConfig.horizontalBlockSize * 9,
+                                SizeConfig.verticalBlockSize * 3,
+                              ),
+                              primary: kBlue,
+                            ),
+                            onPressed: () {},
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+              ),
+              TileWidget(
+                height: SizeConfig.verticalBlockSize * 36,
+                width: SizeConfig.horizontalBlockSize * 30,
+                child: topicsInitialised
+                    ? Consumer<HomeControlProvider>(
+                        builder: (ctx, homeControlProvider, _) {
+                        return StreamBuilder<Object>(
+                          stream: homeControlProvider
+                              .lidar_angle_range.subscription
+                              .where((message) =>
+                                  message['topic'] == '/laser_scan'),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              final topic = TopicData.fromJson(snapshot.data);
+
+                              return Stack(
+                                children: [
+                                  Center(
+                                    child: Image.asset(
+                                      'assets/images/top.png',
+                                      height: SizeConfig.verticalBlockSize * 3,
+                                    ),
+                                  ),
+                                  Center(
+                                    child: CustomPaint(
+                                      painter: OpenPainter(
+                                        allCords: addCord(
+                                          topic.msg,
+                                          SizeConfig.horizontalBlockSize * 30,
+                                          SizeConfig.verticalBlockSize * 36,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            } else {
+                              return CircularProgressIndicator();
+                            }
+                          },
+                        );
+                      })
+                    : Text("Waiting for lidar topic to be intialized"),
+              ),
             ],
           ),
         ],
@@ -476,21 +535,3 @@ class _HomeControlState extends State<HomeControl> {
     );
   }
 }
-
-
-
-//  ScrollConfiguration(
-//         behavior: ScrollConfiguration.of(context).copyWith(
-//           dragDevices: {
-//             PointerDeviceKind.touch,
-//             PointerDeviceKind.mouse,
-//             PointerDeviceKind.stylus,
-//             PointerDeviceKind.invertedStylus,
-//             PointerDeviceKind.unknown,
-//           },
-//         ),
-//         child: SingleChildScrollView(
-
-
-
-

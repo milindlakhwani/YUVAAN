@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:webviewx/webviewx.dart';
 import 'package:yuvaan_gui/config/config.dart';
 import 'package:yuvaan_gui/globals/myColors.dart';
-import 'package:yuvaan_gui/globals/sizeConfig.dart';
 import 'package:yuvaan_gui/widgets/tile_widget.dart';
 
 // ignore: must_be_immutable
@@ -65,19 +64,3 @@ class CameraFeed extends StatelessWidget {
     );
   }
 }
-
-
-
-
-// TileWidget(
-//           isCenter: true,
-//           width: tile_width ?? SizeConfig.horizontalBlockSize * 40,
-//           height: tile_height ?? SizeConfig.verticalBlockSize * 40,
-//           child: WebViewX(
-//             initialContent: initialContent,
-//             initialSourceType: SourceType.html,
-//             onWebViewCreated: (controller) => webviewController = controller,
-//             width: image_width ?? SizeConfig.horizontalBlockSize * 39,
-//             height: image_height ?? SizeConfig.verticalBlockSize * 39,
-//           ),
-//         ),

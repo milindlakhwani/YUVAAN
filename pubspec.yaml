@@ -37,11 +37,14 @@ dependencies:
   collapsible_sidebar: ^2.0.1+2
   web_socket_channel: ^2.1.0
   webviewx: ^0.2.1
-  flutter_map: ^0.14.0
   animated_rotation: ^2.0.0
   animated_widgets: ^1.1.0
   pausable_timer: ^1.0.0+4
   csv: ^5.0.1
+  flutter_map: ^0.14.0
+  file_picker: ^2.1.4
+  fl_chart: ^0.55.2
+  stream_with_value: ^0.5.0
 
 dev_dependencies:
   flutter_test:
@@ -75,6 +78,7 @@ flutter:
     - assets/images/top.png
     - assets/images/syringe.png
     - assets/images/drill.png
+    - assets/images/ground.png
     - assets/images/funnel.png
     - assets/images/beaker.png
     - assets/images/arm.png

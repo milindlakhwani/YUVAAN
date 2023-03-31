@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:js' as js;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -25,6 +26,8 @@ class _ManipulatorState extends State<Manipulator> {
   int base_motor_rpm = 0;
   double steeringVal = 0.0;
   double throttleVal = 0.0;
+  bool steering = false;
+  bool throttle = false;
 
   @override
   void initState() {
@@ -43,121 +46,69 @@ class _ManipulatorState extends State<Manipulator> {
       }
     });
 
-    // timer = Timer.periodic(const Duration(milliseconds: 50), (Timer t) {
-    //   var state = js.JsObject.fromBrowserObject(js.context['state']);
-    //   final manipulatorProvider =
-    //       Provider.of<ManipulatorProvider>(context, listen: false);
+    timer = Timer.periodic(const Duration(milliseconds: 50), (Timer t) {
+      var state = js.JsObject.fromBrowserObject(js.context['state']);
+      final manipulatorProvider =
+          Provider.of<ManipulatorProvider>(context, listen: false);
 
-    //   if (state['R2'] == 1) {
-    //     gripperSelected = true;
-    //     if (currentImage != "arm_gripper") {
-    //       setState(() {
-    //         currentImage = "arm_gripper";
-    //       });
-    //     }
-    //   }
+      if (state['L1'] == 1) {
+        manipulatorProvider.grip(true);
+      } else if (state['R1'] == 1) {
+        manipulatorProvider.grip(false);
+      }
 
-    //   if (state['L2'] == 1) {
-    //     gripperSelected = false;
-    //     if (currentImage != "arm") {
-    //       setState(() {
-    //         currentImage = "arm";
-    //       });
-    //     }
-    //   }
+      if (state['A'] == 1) {
+        manipulatorProvider.move_actuator_up(true);
+      } else if (state['X'] == 1) {
+        manipulatorProvider.move_actuator_up(false);
+      }
 
-    //   if (state['L1'] == 1) {
-    //     gripperSelected = true;
-    //     if (currentImage != "arm_gripper") {
-    //       setState(() {
-    //         currentImage = "arm_gripper";
-    //       });
-    //     }
-    //     manipulatorProvider.rotate_gripper(true);
-    //   } else if (state['R1'] == 1) {
-    //     gripperSelected = true;
-    //     if (currentImage != "arm_gripper") {
-    //       setState(() {
-    //         currentImage = "arm_gripper";
-    //       });
-    //     }
-    //     manipulatorProvider.rotate_gripper(false);
-    //   }
+      if (state['B'] == 1) {
+        manipulatorProvider.move_actuator_bottom(false);
+      } else if (state['Y'] == 1) {
+        manipulatorProvider.move_actuator_bottom(true);
+      }
 
-    //   if (state['B'] == 1) {
-    //     if (currentImage != "arm_link_1") {
-    //       setState(() {
-    //         currentImage = "arm_link_1";
-    //       });
-    //     }
-    //     manipulatorProvider.move_actuator_1(false);
-    //   } else if (state['Y'] == 1) {
-    //     if (currentImage != "arm_link_1") {
-    //       setState(() {
-    //         currentImage = "arm_link_1";
-    //       });
-    //     }
-    //     manipulatorProvider.move_actuator_1(true);
-    //   }
+      if (steeringVal != steering_prev_value) {
+        steering = true;
+        manipulatorProvider.rotate_base_motor((steeringVal * 255).toInt());
+      } else {
+        if (steering) {
+          manipulatorProvider.rotate_base_motor((0).toInt());
+          steering = false;
+        }
+      }
 
-    //   if (state['A'] == 1) {
-    //     if (currentImage != "arm_link_2") {
-    //       setState(() {
-    //         currentImage = "arm_link_2";
-    //       });
-    //     }
-    //     manipulatorProvider.move_actuator_2(true);
-    //   } else if (state['X'] == 1) {
-    //     if (currentImage != "arm_link_2") {
-    //       setState(() {
-    //         currentImage = "arm_link_2";
-    //       });
-    //     }
-    //     manipulatorProvider.move_actuator_2(false);
-    //   }
+      if (state['R2'] == 1) {
+        steering = true;
+        if (steeringVal != steering_prev_value) {
+          manipulatorProvider.gripper_rotate((steeringVal * 255).toInt());
+        }
+      } else {
+        if (steering) {
+          manipulatorProvider.gripper_rotate((0));
+          steering = false;
+        }
+      }
 
-    //   setState(() {
-    //     steeringVal = double.parse(state['Steering'].toStringAsFixed(2));
-    //     throttleVal = double.parse(state['Throttle'].toStringAsFixed(2));
-    //   });
+      if (throttleVal != 0) {
+        throttle = true;
+        manipulatorProvider.gripper_up_down((throttleVal * 255).toInt());
+      } else {
+        if (throttle) {
+          manipulatorProvider.gripper_up_down((0));
+          throttle = false;
+        }
+      }
 
-    //   if (throttleVal != throttle_prev_value) {
-    //     gripperSelected = true;
-    //     if (currentImage != "arm_gripper") {
-    //       setState(() {
-    //         currentImage = "arm_gripper";
-    //       });
-    //     }
-    //     manipulatorProvider.move_gripper((throttleVal * 30).toInt(), 0);
-    //   }
+      setState(() {
+        steeringVal = double.parse(state['Steering'].toStringAsFixed(2));
+        throttleVal = double.parse(state['Throttle'].toStringAsFixed(2));
+      });
 
-    //   if (!gripperSelected) {
-    //     if (steeringVal != steering_prev_value) {
-    //       if (currentImage != "arm_base") {
-    //         setState(() {
-    //           currentImage = "arm_base";
-    //         });
-    //       }
-    //       setState(() {
-    //         base_motor_rpm = (steeringVal * 30).toInt();
-    //       });
-    //       manipulatorProvider.rotate_base_motor((steeringVal * 255).toInt());
-    //     }
-    //   } else {
-    //     if (steeringVal != steering_prev_value) {
-    //       gripperSelected = true;
-    //       if (currentImage != "arm_gripper") {
-    //         setState(() {
-    //           currentImage = "arm_gripper";
-    //         });
-    //       }
-    //       manipulatorProvider.move_gripper(0, (steeringVal * 30).toInt());
-    //     }
-    //   }
-
-    //   steering_prev_value = steeringVal;
-    //   throttle_prev_value = throttleVal;
-    // });
+      steering_prev_value = steeringVal;
+      throttle_prev_value = throttleVal;
+    });
   }
 
   @override

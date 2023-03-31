@@ -21,7 +21,7 @@ class CameraFeed extends StatelessWidget {
   WebViewXController webviewController;
 
   String get initialContent {
-    return '''<img src= "${"http://" + url + ":8080/stream?topic=/" + topicName + "/image_raw&type=mjpeg&quality=80"}" width=${tile_width - 20} height=${tile_height - 20} alt="${altText}" style="color: #FFFFFF;font-weght: bolder;
+    return '''<img src= "${"http://" + url + ":8080/stream?topic=/" + topicName + "/image_raw&type=mjpeg&quality=100"}" width=${tile_width - 20} height=${tile_height - 20} alt="${altText}" style="color: #FFFFFF;font-weght: bolder;
   font-size:20px;">''';
   }
 

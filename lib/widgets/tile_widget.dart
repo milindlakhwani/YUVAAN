@@ -6,8 +6,10 @@ class TileWidget extends StatelessWidget {
   final double height;
   final Widget child;
   final bool isCenter;
+  final Color color;
 
-  const TileWidget({this.width, this.height, this.child, this.isCenter = true});
+  const TileWidget(
+      {this.width, this.height, this.child, this.isCenter = true, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +19,7 @@ class TileWidget extends StatelessWidget {
       child: isCenter ? Center(child: child) : child,
       margin: EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: widget_bg,
+        color: color ?? widget_bg,
         borderRadius: BorderRadius.circular(15),
         boxShadow: const [
           BoxShadow(

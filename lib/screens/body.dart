@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:yuvaan_gui/screens/bioassembly.dart';
 import 'package:yuvaan_gui/screens/home_control.dart';
 import 'package:yuvaan_gui/screens/manipulator.dart';
+import 'package:yuvaan_gui/screens/sensors.dart';
 import 'package:yuvaan_gui/widgets/navbar.dart';
 
 class Body extends StatelessWidget {
@@ -18,10 +19,10 @@ class Body extends StatelessWidget {
         ),
         if (currentPage == "Home")
           HomeControl()
-        else if (currentPage == "Manipulator")
-          Manipulator()
+        else if (currentPage == "Bioassembly")
+          Bioassembly()
         else
-          Bioassembly(),
+          Sensor()
       ],
     );
   }

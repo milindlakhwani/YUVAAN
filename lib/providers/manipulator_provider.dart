@@ -6,26 +6,37 @@ class ManipulatorProvider with ChangeNotifier {
   Ros ros;
   ConnectionStatus connectionStatus;
   ManipulatorProvider(this.ros, this.connectionStatus);
+  bool topicsInitialised = false;
+  bool manipulatorIntialised = false;
 
-  Topic actuator1;
-  Topic actuator2;
+  Topic actuator_bottom;
+  Topic actuator_up;
   Topic base_motor;
   Topic gripper_motor;
-  Topic cmd_vel_arm;
+  Topic gripper_yaw;
+  Topic gripper_motion;
 
   Future<void> initTopics() async {
     if (connectionStatus == ConnectionStatus.CONNECTED) {
-      actuator1 = Topic(
+      actuator_bottom = Topic(
         ros: ros,
-        name: '/actuator1',
+        name: '/actuator_bottom',
         type: "std_msgs/Bool",
         reconnectOnClose: true,
         queueLength: 10,
         queueSize: 10,
       );
-      actuator2 = Topic(
+      actuator_up = Topic(
         ros: ros,
-        name: '/actuator2',
+        name: '/actuator_up',
+        type: "std_msgs/Bool",
+        reconnectOnClose: true,
+        queueLength: 10,
+        queueSize: 10,
+      );
+      gripper_motor = Topic(
+        ros: ros,
+        name: '/gripper_motor',
         type: "std_msgs/Bool",
         reconnectOnClose: true,
         queueLength: 10,
@@ -39,18 +50,18 @@ class ManipulatorProvider with ChangeNotifier {
         queueLength: 10,
         queueSize: 10,
       );
-      gripper_motor = Topic(
+      gripper_yaw = Topic(
         ros: ros,
-        name: '/gripper_motor',
-        type: "std_msgs/Bool",
+        name: '/gripper_yaw',
+        type: "std_msgs/Int16",
         reconnectOnClose: true,
         queueLength: 10,
         queueSize: 10,
       );
-      cmd_vel_arm = Topic(
+      gripper_motion = Topic(
         ros: ros,
-        name: '/cmd_vel_arm',
-        type: "geometry_msgs/Twist",
+        name: '/gripper_motion',
+        type: "std_msgs/Int16",
         reconnectOnClose: true,
         queueLength: 10,
         queueSize: 10,
@@ -58,28 +69,36 @@ class ManipulatorProvider with ChangeNotifier {
 
       await Future.wait(
         [
-          actuator1.advertise(),
-          actuator2.advertise(),
+          actuator_bottom.advertise(),
+          actuator_up.advertise(),
           base_motor.advertise(),
           gripper_motor.advertise(),
-          cmd_vel_arm.advertise(),
+          gripper_yaw.advertise(),
+          gripper_motion.advertise(),
         ],
       );
     }
   }
 
-  Future<void> move_actuator_1(bool move_up) async {
+  Future<void> move_actuator_bottom(bool move_up) async {
     var msg = {
       'data': move_up,
     };
-    await actuator1.publish(msg);
+    await actuator_bottom.publish(msg);
   }
 
-  Future<void> move_actuator_2(bool move_up) async {
+  Future<void> move_actuator_up(bool move_up) async {
     var msg = {
       'data': move_up,
     };
-    await actuator2.publish(msg);
+    await actuator_up.publish(msg);
+  }
+
+  Future<void> grip(bool clockwise) async {
+    var msg = {
+      'data': clockwise,
+    };
+    await gripper_motor.publish(msg);
   }
 
   Future<void> rotate_base_motor(int pwm) async {
@@ -89,25 +108,33 @@ class ManipulatorProvider with ChangeNotifier {
     await base_motor.publish(msg);
   }
 
-  Future<void> rotate_gripper(bool clockwise) async {
+  Future<void> gripper_up_down(int pwm) async {
     var msg = {
-      'data': clockwise,
+      'data': pwm,
     };
-    await gripper_motor.publish(msg);
+    await gripper_motion.publish(msg);
   }
 
-  Future<void> move_gripper(int lin_rpm, int ang_rpm) async {
-    var linear = {
-      'x': lin_rpm,
-      'y': 0.0,
-      'z': 0.0,
+  Future<void> gripper_rotate(int pwm) async {
+    var msg = {
+      'data': pwm,
     };
-    var angular = {
-      'x': 0.0,
-      'y': 0.0,
-      'z': ang_rpm,
-    };
-    var twist = {'linear': linear, 'angular': angular};
-    await cmd_vel_arm.publish(twist);
+    await gripper_yaw.publish(msg);
+  }
+
+  Future<void> clearTopics() async {
+    await actuator_bottom.unadvertise();
+    await actuator_up.unadvertise();
+    await base_motor.unadvertise();
+    await gripper_motor.unadvertise();
+    await gripper_yaw.unadvertise();
+    await gripper_motion.unadvertise();
+    topicsInitialised = false;
+  }
+
+  void changeStatus() {
+    topicsInitialised = true;
+    // topicsInitialised = !topicsInitialised;
+    // manipulatorIntialised = !manipulatorIntialised;
   }
 }

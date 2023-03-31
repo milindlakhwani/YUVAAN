@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:js' as js;
 
 import 'package:collapsible_sidebar/collapsible_sidebar.dart';
 import 'package:flutter/cupertino.dart';
@@ -19,7 +20,7 @@ class _HomePageState extends State<HomePage> {
   Timer timer;
   Widget main_body;
   int _currentPage = 0;
-  List<String> _pages = ["Home", "Manipulator", "Bioassembly"];
+  List<String> _pages = ["Home", "Bioassembly", "Sensors"];
   Map<String, double> controller_values = {
     'Share': 0,
     'Options': 0,
@@ -39,12 +40,12 @@ class _HomePageState extends State<HomePage> {
   //     setState(() {
   //       if (controller_values['Share'] == 1) {
   //         if (_currentPage == 0) {
-  //           _currentPage = 2;
+  //           _currentPage = 1;
   //         } else {
   //           _currentPage--;
   //         }
   //       } else if (controller_values['Options'] == 1) {
-  //         if (_currentPage == 2) {
+  //         if (_currentPage == 1) {
   //           _currentPage = 0;
   //         } else {
   //           _currentPage++;
@@ -54,11 +55,11 @@ class _HomePageState extends State<HomePage> {
   //   });
   // }
 
-  @override
-  void dispose() {
-    // timer.cancel();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   timer.cancel();
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -79,8 +80,8 @@ class _HomePageState extends State<HomePage> {
             isSelected: _currentPage == 0,
           ),
           CollapsibleItem(
-            text: 'Manipulator',
-            icon: CustomIcon.robotic_arm,
+            text: 'Bioassembly',
+            icon: CustomIcon.bio_assembly,
             onPressed: () {
               setState(() {
                 _currentPage = 1;
@@ -89,8 +90,8 @@ class _HomePageState extends State<HomePage> {
             isSelected: _currentPage == 1,
           ),
           CollapsibleItem(
-            text: 'Bioassembly',
-            icon: CustomIcon.bio_assembly,
+            text: 'Sensors',
+            icon: Icons.sensors,
             onPressed: () {
               setState(() {
                 _currentPage = 2;
@@ -110,20 +111,6 @@ class _HomePageState extends State<HomePage> {
         selectedIconBox: selected_color,
         selectedIconColor: kWhite,
         borderRadius: 0,
-        // body: ScrollConfiguration(
-        //   behavior: ScrollConfiguration.of(context).copyWith(
-        //     dragDevices: {
-        //       PointerDeviceKind.touch,
-        //       PointerDeviceKind.mouse,
-        //       PointerDeviceKind.stylus,
-        //       PointerDeviceKind.invertedStylus,
-        //       PointerDeviceKind.unknown,
-        //     },
-        //   ),
-        //   child: Body(
-        //     currentPage: _pages[_currentPage],
-        //   ),
-        // ),
         body: SingleChildScrollView(
           child: Body(
             currentPage: _pages[_currentPage],

@@ -3,34 +3,34 @@ import 'package:flutter/material.dart';
 import 'package:yuvaan_gui/globals/myColors.dart';
 import 'package:yuvaan_gui/globals/sizeConfig.dart';
 
-class BeakerPainter extends CustomPainter {
+class SyringePainter extends CustomPainter {
   final List<Offset> emptyPoints;
   final List<Offset> filledPoints;
   final double width;
   // final double height;
 
-  BeakerPainter({this.emptyPoints, this.filledPoints, this.width});
+  SyringePainter({this.emptyPoints, this.filledPoints, this.width});
 
-  final strokeWidth = SizeConfig.horizontalBlockSize * 2.8;
+  final strokeWidth = SizeConfig.horizontalBlockSize * 2;
 
   @override
   void paint(Canvas canvas, Size size) {
     var base_plate = Paint()
-      ..color = Color.fromARGB(214, 194, 18, 18)
+      ..color = kWhite.withOpacity(0.8)
       ..strokeCap = StrokeCap.round //rounded points
       ..strokeWidth = 50;
     var emptyPaint = Paint()
-      ..color = kWhite.withOpacity(0.9)
+      ..color = widget_bg
       ..strokeCap = StrokeCap.round //rounded points
       ..strokeWidth = strokeWidth
       ..style = PaintingStyle.stroke;
     ;
     var filledPaint = Paint()
-      ..color = Color.fromRGBO(124, 94, 66, 1)
+      ..color = Color.fromARGB(255, 109, 160, 175)
       ..strokeCap = StrokeCap.round //rounded points
       ..strokeWidth = strokeWidth;
 
-    canvas.drawCircle(Offset.zero, (width / 2) - 25, base_plate);
+    canvas.drawCircle(Offset.zero, (width / 2) - 10, base_plate);
 
     //draw points on canvas
     canvas.drawPoints(PointMode.points, emptyPoints, emptyPaint);

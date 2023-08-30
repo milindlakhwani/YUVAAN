@@ -151,14 +151,14 @@ class _SensorState extends State<Sensor> {
               ),
             ],
           ),
-          Row(
-            children: [
-              TileWidget(
-                height: SizeConfig.verticalBlockSize * 25,
-                width: SizeConfig.horizontalBlockSize * 10,
-              ),
-            ],
-          ),
+          // Row(
+          //   children: [
+          //     TileWidget(
+          //       height: SizeConfig.verticalBlockSize * 25,
+          //       width: SizeConfig.horizontalBlockSize * 10,
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     );

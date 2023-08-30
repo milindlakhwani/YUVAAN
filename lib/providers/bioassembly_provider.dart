@@ -35,7 +35,7 @@ class BioassemblyProvider with ChangeNotifier {
       co: 13,
       humidity: 10,
       methane: 12,
-      pressure: 10,
+      pressure: 1,
       temperature: 12,
       wind_speed: 21,
     ),
@@ -48,7 +48,7 @@ class BioassemblyProvider with ChangeNotifier {
     co: 13,
     humidity: 10,
     methane: 12,
-    pressure: 10,
+    pressure: 1,
     temperature: 12,
     wind_speed: 21,
   );
@@ -57,7 +57,7 @@ class BioassemblyProvider with ChangeNotifier {
     co: 13,
     humidity: 10,
     methane: 12,
-    pressure: 10,
+    pressure: 1,
     temperature: 12,
     wind_speed: 21,
   );

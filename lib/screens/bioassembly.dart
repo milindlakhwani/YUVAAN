@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:js' as js;
 
-import 'package:animated_widgets/widgets/rotation_animated.dart';
 import 'package:flutter/material.dart';
 import 'package:pausable_timer/pausable_timer.dart';
 import 'package:provider/provider.dart';
@@ -11,7 +10,6 @@ import 'package:yuvaan_gui/globals/myColors.dart';
 import 'package:yuvaan_gui/globals/myFonts.dart';
 import 'package:yuvaan_gui/globals/mySpaces.dart';
 import 'package:yuvaan_gui/globals/sizeConfig.dart';
-import 'package:yuvaan_gui/models/topic_data.dart';
 import 'package:yuvaan_gui/providers/bioassembly_provider.dart';
 import 'package:yuvaan_gui/providers/home_control_provider.dart';
 import 'package:yuvaan_gui/widgets/beaker_painter.dart';

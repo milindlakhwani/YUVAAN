@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yuvaan_gui/screens/bioassembly.dart';
 import 'package:yuvaan_gui/screens/home_control.dart';
-import 'package:yuvaan_gui/screens/manipulator.dart';
 import 'package:yuvaan_gui/screens/sensors.dart';
 import 'package:yuvaan_gui/widgets/navbar.dart';
 
